@@ -5,8 +5,9 @@ from rest_framework import status
 from .models import Transaction
 from .serializers import TransactionCreateSerializer, TransactionConfirmSerializer, TransactionCancelSerializer, TransactionHistorySerializer
 import random
+from django.utils import timezone
 
-# Создание транзакции
+
 class TransactionCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -24,7 +25,7 @@ class TransactionCreateView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Подтверждение транзакции
+
 class TransactionConfirmView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -45,7 +46,7 @@ class TransactionConfirmView(APIView):
                 return Response({'error': 'Transaction not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Отмена транзакции
+
 class TransactionCancelView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -61,7 +62,7 @@ class TransactionCancelView(APIView):
                 return Response({'error': 'Transaction not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# История транзакций
+
 class TransactionHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -76,7 +77,13 @@ class TransactionHistoryView(APIView):
             transactions = transactions.filter(status=status_filter)
 
         if date_from and date_to:
-            transactions = transactions.filter(created_at__range=[date_from, date_to])
+            try:
+                date_from_dt = timezone.datetime.fromisoformat(date_from)
+                date_to_dt = timezone.datetime.fromisoformat(date_to)
+
+                transactions = transactions.filter(created_at__range=[date_from_dt, date_to_dt])
+            except ValueError:
+                return Response({"error": "Invalid date format."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = TransactionHistorySerializer(transactions, many=True)
         return Response(serializer.data)
