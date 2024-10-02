@@ -13,7 +13,15 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
+            refresh = RefreshToken.for_user(user)
+            res = {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user": serializer.data,
+                "message": "User Registered Successfully"
+            }
+
+            return Response(res, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
