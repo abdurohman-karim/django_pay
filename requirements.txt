@@ -1,0 +1,7 @@
+Django
+djangorestframework
+djangorestframework-simplejwt
+requests
+mysqlclient
+psycopg2-binary
+django-cors-headers
